@@ -1,3 +1,3 @@
-module github.com/guohuiyuan/bilibili
+module github.com/guohuiyuan/biligo
 
 go 1.18
