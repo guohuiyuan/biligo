@@ -14,6 +14,7 @@ const (
 	SearchTypeFT       SearchType = "media_ft"
 	SearchTypeUser     SearchType = "bili_user"
 	SearchTypeLiveRoom SearchType = "live_room"
+	SearchTypeTopic    SearchType = "topic"
 )
 
 func (s *SearchService) All(ctx context.Context, keyword string, page int) (*SearchAllResult, error) {

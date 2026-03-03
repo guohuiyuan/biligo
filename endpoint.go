@@ -15,6 +15,9 @@ type endpoint struct {
 }
 
 func (e endpoint) url(c *Client) string {
+	if len(e.path) >= 4 && e.path[:4] == "http" {
+		return e.path
+	}
 	base := c.config.BaseURL
 	switch e.baseURL {
 	case passportBase:
@@ -65,6 +68,20 @@ var (
 		withWBI:   true,
 		dataField: "data",
 	}
+	endpointUserVideos = endpoint{
+		name:      "user.videos",
+		path:      "/x/space/wbi/arc/search",
+		method:    http.MethodGet,
+		withWBI:   true,
+		dataField: "data",
+	}
+	endpointUserFollowers = endpoint{
+		name:      "user.followers",
+		path:      "/x/relation/followers",
+		method:    http.MethodGet,
+		needLogin: true,
+		dataField: "data",
+	}
 	endpointSearchAll = endpoint{
 		name:      "search.all",
 		path:      "/x/web-interface/wbi/search/all/v2",
@@ -84,6 +101,25 @@ var (
 		path:      "/x/web-interface/search/suggest",
 		method:    http.MethodGet,
 		dataField: "result",
+	}
+	endpointZoneHotTags = endpoint{
+		name:      "zone.hot.tags",
+		path:      "/x/tag/hots",
+		method:    http.MethodGet,
+		dataField: "data",
+	}
+	endpointTagInfo = endpoint{
+		name:      "tag.info",
+		path:      "/x/tag/info",
+		method:    http.MethodGet,
+		dataField: "data",
+	}
+	endpointZoneRanking = endpoint{
+		name:      "zone.ranking",
+		path:      "/x/web-interface/ranking/v2",
+		method:    http.MethodGet,
+		withWBI:   true,
+		dataField: "data",
 	}
 	endpointLiveRoomInfo = endpoint{
 		name:      "live.room.info",

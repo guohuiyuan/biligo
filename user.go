@@ -28,6 +28,34 @@ func (s *UserService) RelationStat(ctx context.Context, mid int64) (*UserRelatio
 	return &out, nil
 }
 
+func (s *UserService) Videos(ctx context.Context, mid int64, page, pageSize int) (*UserVideoSearchResult, error) {
+	var out UserVideoSearchResult
+	req := s.client.NewRequest(endpointUserVideos).
+		ParamInt("mid", mid).
+		ParamInt("pn", int64(page)).
+		ParamInt("ps", int64(pageSize)).
+		ParamInt("tid", 0)
+	err := req.Do(ctx, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
+func (s *UserService) Followers(ctx context.Context, mid int64, page, pageSize int) (*UserFollowersResult, error) {
+	var out UserFollowersResult
+	req := s.client.NewRequest(endpointUserFollowers).
+		ParamInt("vmid", mid).
+		ParamInt("pn", int64(page)).
+		ParamInt("ps", int64(pageSize)).
+		Param("order", "desc")
+	err := req.Do(ctx, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 type UserInfo struct {
 	Mid      int64  `json:"mid"`
 	Name     string `json:"name"`
@@ -53,4 +81,18 @@ type UserRelationStat struct {
 	Whisper   int64 `json:"whisper"`
 	Black     int64 `json:"black"`
 	Follower  int64 `json:"follower"`
+}
+
+type UserVideoSearchResult struct {
+	List struct {
+		VList []VideoInfo `json:"vlist"`
+	} `json:"list"`
+}
+
+type UserFollowersResult struct {
+	List []struct {
+		Mid   int64  `json:"mid"`
+		Uname string `json:"uname"`
+		Face  string `json:"face"`
+	} `json:"list"`
 }

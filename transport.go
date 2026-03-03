@@ -25,6 +25,7 @@ type RequestBuilder struct {
 	client   *Client
 	endpoint endpoint
 	params   url.Values
+	form     url.Values
 	headers  http.Header
 	body     io.Reader
 }
@@ -34,6 +35,7 @@ func newRequestBuilder(client *Client, endpoint endpoint) *RequestBuilder {
 		client:   client,
 		endpoint: endpoint,
 		params:   make(url.Values),
+		form:     make(url.Values),
 		headers:  make(http.Header),
 	}
 }
@@ -59,6 +61,25 @@ func (r *RequestBuilder) ParamBool(key string, value bool) *RequestBuilder {
 
 func (r *RequestBuilder) Header(key, value string) *RequestBuilder {
 	r.headers.Set(key, value)
+	return r
+}
+
+func (r *RequestBuilder) Form(key, value string) *RequestBuilder {
+	r.form.Set(key, value)
+	return r
+}
+
+func (r *RequestBuilder) FormInt(key string, value int64) *RequestBuilder {
+	r.form.Set(key, strconv.FormatInt(value, 10))
+	return r
+}
+
+func (r *RequestBuilder) FormBool(key string, value bool) *RequestBuilder {
+	if value {
+		r.form.Set(key, "1")
+	} else {
+		r.form.Set(key, "0")
+	}
 	return r
 }
 
@@ -94,6 +115,13 @@ func (r *RequestBuilder) Do(ctx context.Context, out any) error {
 		return err
 	}
 	req.URL.RawQuery = r.params.Encode()
+	if r.body == nil && len(r.form) > 0 {
+		req.Body = io.NopCloser(strings.NewReader(r.form.Encode()))
+		req.ContentLength = int64(len(r.form.Encode()))
+		if req.Header.Get("Content-Type") == "" {
+			req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+		}
+	}
 
 	for key, value := range defaultHeaders {
 		req.Header.Set(key, value)
