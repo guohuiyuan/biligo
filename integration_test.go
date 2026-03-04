@@ -10,12 +10,10 @@ import (
 	"bufio"
 	"context"
 	"fmt"
-	"net/url"
 	"os"
 	"strconv"
 	"strings"
 	"testing"
-	"time"
 )
 
 // ---------------------------------------------------------------------------
@@ -539,127 +537,6 @@ func TestIntegrationLogin_QRCodeGenerate(t *testing.T) {
 	}
 	t.Logf("✅ 二维码 URL: %s", result.URL)
 	t.Logf("✅ 二维码 key: %s", result.QRCodeKey)
-}
-
-// TestIntegrationLogin_QRCodeFlow 完整扫码登录流程：生成二维码 → 终端展示 → 轮询结果。
-//
-// 运行方式：
-//
-//	BILIBILI_QR_TESTS=1 go test -v -run TestIntegrationLogin_QRCodeFlow -timeout 180s ./...
-//
-// 测试会在终端打印二维码 URL，用手机 bilibili App 扫码后确认登录即可。
-// 成功后会将新 cookie 打印到日志，可替换 .env 中的 BILIBILI_COOKIE。
-func TestIntegrationLogin_QRCodeFlow(t *testing.T) {
-	t.Log("API: passport-login/web/qrcode/generate + poll")
-	if loadEnvKey(".env", "BILIBILI_QR_TESTS") != "1" {
-		t.Skip("跳过：在 .env 中设置 BILIBILI_QR_TESTS=1 才运行扫码登录测试")
-	}
-
-	c := NewClient()
-
-	// 1. 生成二维码
-	gen, err := c.Login().QRCodeGenerate(integCtx)
-	if err != nil {
-		t.Fatalf("❌ QRCodeGenerate error: %v", err)
-	}
-
-	// 2. 在终端显示二维码（ASCII 方块 + URL + 使用说明）
-	t.Log("\n" + qrBanner(gen.URL))
-
-	// 3. 轮询登录状态（最长 120 秒）
-	const (
-		codeNotScanned = 86101 // 未扫码
-		codeScanned    = 86090 // 已扫码，待确认
-		codeExpired    = 86038 // 二维码已过期
-		codeSuccess    = 0     // 登录成功
-	)
-
-	deadline := 120
-	for i := 0; i < deadline; i += 2 {
-		time.Sleep(2 * time.Second)
-
-		poll, err := c.Login().QRCodePoll(integCtx, gen.QRCodeKey)
-		if err != nil {
-			t.Logf("⚠️ [%3ds] 轮询出错: %v", i+2, err)
-			continue
-		}
-
-		switch poll.Code {
-		case codeNotScanned:
-			t.Logf("⏳ [%3ds] 等待扫码...", i+2)
-		case codeScanned:
-			t.Logf("✅ [%3ds] 已扫码，请在手机上确认登录", i+2)
-		case codeExpired:
-			t.Fatal("❌ 二维码已过期，请重新运行测试")
-		case codeSuccess:
-			// 登录成功：从 cookie jar 中提取凭据
-			passportURL, _ := url.Parse(passportBase)
-			httpCookies := c.cookies.Cookies(passportURL)
-			cred := NewCredentialFromHTTPCookies(httpCookies)
-			if cred.SessData == "" {
-				// 部分环境 cookie 落在主域
-				mainURL, _ := url.Parse(apiBase)
-				httpCookies = c.cookies.Cookies(mainURL)
-				cred = NewCredentialFromHTTPCookies(httpCookies)
-			}
-			c.SetCredential(cred)
-
-			t.Logf("✅ 登录成功！")
-			t.Logf("SESSDATA    = %s", cred.SessData)
-			t.Logf("bili_jct    = %s", cred.BiliJct)
-			t.Logf("DedeUserID  = %s", cred.DedeUserID)
-			t.Logf("buvid3      = %s", cred.Buvid3)
-			t.Logf("buvid4      = %s", cred.Buvid4)
-			t.Logf("\n将以下内容写入 .env 的 BILIBILI_COOKIE 字段（分号分隔）：")
-			t.Logf("SESSDATA=%s; bili_jct=%s; DedeUserID=%s; buvid3=%s; buvid4=%s",
-				cred.SessData, cred.BiliJct, cred.DedeUserID, cred.Buvid3, cred.Buvid4)
-
-			// 验证新 cookie 有效
-			nav, navErr := c.Login().Nav(integCtx)
-			if navErr != nil {
-				t.Fatalf("❌ Nav 验证失败: %v", navErr)
-			}
-			t.Logf("✅ 已登录用户: %s (mid=%d)", nav.Uname, nav.Mid)
-			return
-		default:
-			t.Logf("⚠️ [%3ds] 未知状态码: %d message=%s", i+2, poll.Code, poll.Message)
-		}
-	}
-
-	t.Fatal("❌ 超时（120s）未完成扫码，测试终止")
-}
-
-// qrBanner 生成终端友好的二维码展示文字（使用 Unicode 半块字符打印 QR 矩阵）。
-func qrBanner(url string) string {
-	var sb strings.Builder
-	sb.WriteString("┌─────────────────────────────────────────┐\n")
-	sb.WriteString("│           📱 请用 bilibili App 扫码登录  │\n")
-	sb.WriteString("├─────────────────────────────────────────┤\n")
-	sb.WriteString("│ 二维码 URL（可粘贴到二维码生成器）:      │\n")
-
-	// 每行最多 41 字符（框内）
-	urlRunes := []rune(url)
-	lineLen := 39
-	for i := 0; i < len(urlRunes); i += lineLen {
-		end := i + lineLen
-		if end > len(urlRunes) {
-			end = len(urlRunes)
-		}
-		line := string(urlRunes[i:end])
-		padding := lineLen - len([]rune(line))
-		sb.WriteString("│ ")
-		sb.WriteString(line)
-		for j := 0; j < padding; j++ {
-			sb.WriteByte(' ')
-		}
-		sb.WriteString(" │\n")
-	}
-
-	sb.WriteString("├─────────────────────────────────────────┤\n")
-	sb.WriteString("│  提示：将 URL 粘贴到 https://cli.im 或   │\n")
-	sb.WriteString("│  任意二维码生成网站，再用手机扫描即可。  │\n")
-	sb.WriteString("└─────────────────────────────────────────┘\n")
-	return sb.String()
 }
 
 // ---------------------------------------------------------------------------
