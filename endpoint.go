@@ -140,6 +140,7 @@ var (
 		baseURL:   liveBase,
 		path:      "/xlive/web-room/v1/index/getDanmuInfo",
 		method:    http.MethodGet,
+		withWBI:   true,
 		dataField: "data",
 	}
 	endpointLoginQRCodeGenerate = endpoint{

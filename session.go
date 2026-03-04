@@ -55,11 +55,8 @@ type Session struct {
 		Timestamp int64  `json:"timestamp"`
 		MsgType   int    `json:"msg_type"`
 	} `json:"last_msg"`
-	AccountInfo struct {
-		UID  int64  `json:"uid"`
-		Name string `json:"name"`
-		Pic  string `json:"pic"`
-	} `json:"account_info"`
+	// Note: the get_sessions API does NOT return account_info / user name.
+	// Uname must be fetched separately via User().Info() if needed.
 }
 
 type SessionMessages struct {
@@ -110,8 +107,7 @@ func (c *Client) GetMsgFeed(page int32) ([]MsgFeedItem, error) {
 	for _, session := range out.SessionList {
 		items = append(items, MsgFeedItem{
 			Mid:      session.TalkerID,
-			Uname:    session.AccountInfo.Name,
-			Avatar:   session.AccountInfo.Pic,
+			Uname:    "", // API does not return username; call User().Info() separately if needed.
 			LastMsg:  session.LastMsg.Content,
 			Unfollow: int64(session.UnreadCount),
 		})
@@ -129,6 +125,7 @@ func (c *Client) GetChatHistory(userID int64, page int32) ([]ChatHistoryItem, er
 	err := c.NewRequest(endpointSessionFetch).
 		ParamInt("talker_id", userID).
 		ParamInt("session_type", 1).
+		ParamInt("size", 30).
 		ParamInt("begin_seqno", beginSeqno).
 		Do(context.Background(), &out)
 	if err != nil {

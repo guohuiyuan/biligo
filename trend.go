@@ -3,14 +3,28 @@ package bilibili
 import "context"
 
 type HotTag struct {
-	Name string `json:"tag_name"`
-	Hot  int64  `json:"heat"`
+	TagID int64  `json:"tag_id"`
+	Name  string `json:"tag_name"`
+	// Hot is always 0; the API no longer returns a heat value.
+	Hot int64 `json:"-"`
+}
+
+// hotTagGroup mirrors the per-zone wrapper returned by /x/tag/hots.
+type hotTagGroup struct {
+	RID  int32    `json:"rid"`
+	Tags []HotTag `json:"tags"`
+}
+
+type TagCount struct {
+	View  int64 `json:"view"`
+	Use   int64 `json:"use"`
+	Atten int64 `json:"atten"`
 }
 
 type TagInfo struct {
-	TagID int64 `json:"tag_id"`
-	Hot   int64 `json:"atten"`
-	Count int64 `json:"count"`
+	TagID int64    `json:"tag_id"`
+	Hot   int64    `json:"atten"`
+	Count TagCount `json:"count"`
 }
 
 type RankingV2 struct {
@@ -18,12 +32,17 @@ type RankingV2 struct {
 }
 
 func (c *Client) GetHotTags(rid int32) ([]HotTag, error) {
-	var out []HotTag
+	var groups []hotTagGroup
 	err := c.NewRequest(endpointZoneHotTags).
 		ParamInt("rid", int64(rid)).
-		Do(context.Background(), &out)
+		Do(context.Background(), &groups)
 	if err != nil {
 		return nil, err
+	}
+	// The API returns tags grouped by sub-zone; flatten them into a single slice.
+	var out []HotTag
+	for _, g := range groups {
+		out = append(out, g.Tags...)
 	}
 	return out, nil
 }

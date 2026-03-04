@@ -33,6 +33,7 @@ func (s *LiveService) DanmuInfo(ctx context.Context, roomID int64) (*LiveDanmuIn
 	var out LiveDanmuInfo
 	err := s.client.NewRequest(endpointLiveDanmuInfo).
 		ParamInt("id", roomID).
+		Param("type", "0").
 		Do(ctx, &out)
 	if err != nil {
 		return nil, err
@@ -66,12 +67,10 @@ type LiveRoomInfo struct {
 }
 
 type LiveDanmuInfo struct {
-	Group    string `json:"group"`
-	Business struct {
-		Token string `json:"token"`
-	} `json:"business_id"`
-	Token    string `json:"token"`
-	HostList []struct {
+	Group      string `json:"group"`
+	BusinessID int64  `json:"business_id"` // API 返回整数 ID
+	Token      string `json:"token"`
+	HostList   []struct {
 		Host    string `json:"host"`
 		Port    int    `json:"port"`
 		WSPort  int    `json:"ws_port"`

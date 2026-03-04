@@ -53,7 +53,7 @@ type VideoComment struct {
 		Message string `json:"message"`
 	} `json:"content"`
 	Member struct {
-		Mid   int64  `json:"mid"`
+		Mid   int64  `json:"mid,string"` // API 返回字符串形式的 mid
 		Uname string `json:"uname"`
 	} `json:"member"`
 }
