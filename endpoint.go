@@ -121,6 +121,12 @@ var (
 		withWBI:   true,
 		dataField: "data",
 	}
+	endpointPGCRanking = endpoint{
+		name:      "pgc.ranking",
+		path:      "/pgc/web/rank/list",
+		method:    http.MethodGet,
+		dataField: "result",
+	}
 	endpointLiveRoomInfo = endpoint{
 		name:      "live.room.info",
 		baseURL:   liveBase,

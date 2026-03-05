@@ -31,6 +31,22 @@ type RankingV2 struct {
 	List []VideoInfo `json:"list"`
 }
 
+type PGCRankingResult struct {
+	List []PGCRankItem `json:"list"`
+}
+
+type PGCRankItem struct {
+	SeasonID int64  `json:"season_id"`
+	Title    string `json:"title"`
+	Badge    string `json:"badge"`
+	Cover    string `json:"cover"`
+	Stat     struct {
+		View    int64 `json:"view"`
+		Danmaku int64 `json:"danmaku"`
+		Follow  int64 `json:"follow"`
+	} `json:"stat"`
+}
+
 func (c *Client) GetHotTags(rid int32) ([]HotTag, error) {
 	var groups []hotTagGroup
 	err := c.NewRequest(endpointZoneHotTags).
@@ -97,11 +113,33 @@ func (c *Client) GetTagVideos(tagName string, page int32) ([]VideoInfo, error) {
 }
 
 func (c *Client) GetRanking(rid int32) ([]VideoInfo, error) {
+	return c.GetRankingWithType(rid, "all")
+}
+
+func (c *Client) GetRankingWithType(rid int32, rankType string) ([]VideoInfo, error) {
+	if rankType == "" {
+		rankType = "all"
+	}
 	var out RankingV2
 	err := c.NewRequest(endpointZoneRanking).
 		ParamInt("rid", int64(rid)).
-		Param("type", "all").
+		Param("type", rankType).
 		Param("web_location", "333.934").
+		Do(context.Background(), &out)
+	if err != nil {
+		return nil, err
+	}
+	return out.List, nil
+}
+
+func (c *Client) GetPGCRanking(seasonType, day int32) ([]PGCRankItem, error) {
+	if day == 0 {
+		day = 3
+	}
+	var out PGCRankingResult
+	err := c.NewRequest(endpointPGCRanking).
+		ParamInt("season_type", int64(seasonType)).
+		ParamInt("day", int64(day)).
 		Do(context.Background(), &out)
 	if err != nil {
 		return nil, err
