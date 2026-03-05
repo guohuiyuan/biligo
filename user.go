@@ -1,6 +1,11 @@
 package bilibili
 
-import "context"
+import (
+	"context"
+	"encoding/json"
+	"strconv"
+	"strings"
+)
 
 type UserService struct {
 	client *Client
@@ -85,8 +90,61 @@ type UserRelationStat struct {
 
 type UserVideoSearchResult struct {
 	List struct {
-		VList []VideoInfo `json:"vlist"`
+		VList []UserVideoItem `json:"vlist"`
 	} `json:"list"`
+}
+
+type FlexInt64 int64
+
+func (f *FlexInt64) UnmarshalJSON(data []byte) error {
+	trimmed := strings.TrimSpace(string(data))
+	if trimmed == "" || trimmed == "null" {
+		*f = 0
+		return nil
+	}
+	if len(trimmed) >= 2 && trimmed[0] == '"' && trimmed[len(trimmed)-1] == '"' {
+		s := strings.Trim(trimmed, "\"")
+		if s == "" {
+			*f = 0
+			return nil
+		}
+		if n, err := strconv.ParseInt(s, 10, 64); err == nil {
+			*f = FlexInt64(n)
+			return nil
+		}
+		if fl, err := strconv.ParseFloat(s, 64); err == nil {
+			*f = FlexInt64(int64(fl))
+			return nil
+		}
+		*f = 0
+		return nil
+	}
+	var num json.Number
+	if err := json.Unmarshal(data, &num); err != nil {
+		*f = 0
+		return nil
+	}
+	if n, err := num.Int64(); err == nil {
+		*f = FlexInt64(n)
+		return nil
+	}
+	if fl, err := num.Float64(); err == nil {
+		*f = FlexInt64(int64(fl))
+		return nil
+	}
+	*f = 0
+	return nil
+}
+
+type UserVideoItem struct {
+	BVID    string    `json:"bvid"`
+	Title   string    `json:"title"`
+	Pic     string    `json:"pic"`
+	Length  string    `json:"length"`
+	Play    FlexInt64 `json:"play"`
+	Comment FlexInt64 `json:"comment"`
+	Created int64     `json:"created"`
+	PubDate int64     `json:"pubdate"`
 }
 
 type UserFollowersResult struct {

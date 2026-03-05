@@ -143,7 +143,7 @@ func (c *Client) GetFans(page, pageSize int32) ([]struct {
 	return out, nil
 }
 
-func (c *Client) GetUserVideos(mid int64, page, pageSize int) ([]VideoInfo, error) {
+func (c *Client) GetUserVideos(mid int64, page, pageSize int) ([]UserVideoItem, error) {
 	resp, err := c.User().Videos(context.Background(), mid, page, pageSize)
 	if err != nil {
 		return nil, err
