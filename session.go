@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -216,5 +217,49 @@ func decodeMessageContent(raw json.RawMessage) string {
 	if err := json.Unmarshal(raw, &text); err == nil && text.Content != "" {
 		return text.Content
 	}
-	return string(raw)
+
+	var wrapped string
+	if err := json.Unmarshal(raw, &wrapped); err == nil {
+		if parsed := decodeMessageContentString(wrapped); parsed != "" {
+			return parsed
+		}
+		return wrapped
+	}
+
+	plain := strings.TrimSpace(string(raw))
+	if parsed := decodeMessageContentString(plain); parsed != "" {
+		return parsed
+	}
+	return plain
+}
+
+func decodeMessageContentString(s string) string {
+	s = strings.TrimSpace(s)
+	if s == "" {
+		return ""
+	}
+
+	var text struct {
+		Content string `json:"content"`
+	}
+	if err := json.Unmarshal([]byte(s), &text); err == nil && text.Content != "" {
+		return text.Content
+	}
+
+	var inner string
+	if err := json.Unmarshal([]byte(s), &inner); err == nil {
+		inner = strings.TrimSpace(inner)
+		if inner != "" && inner != s {
+			if parsed := decodeMessageContentString(inner); parsed != "" {
+				return parsed
+			}
+			return inner
+		}
+	}
+
+	if strings.HasPrefix(s, "\"") && strings.HasSuffix(s, "\"") && len(s) >= 2 {
+		return strings.Trim(s, "\"")
+	}
+
+	return s
 }
