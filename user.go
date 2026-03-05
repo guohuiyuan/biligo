@@ -152,5 +152,6 @@ type UserFollowersResult struct {
 		Mid   int64  `json:"mid"`
 		Uname string `json:"uname"`
 		Face  string `json:"face"`
+		MTime int64  `json:"mtime"`
 	} `json:"list"`
 }

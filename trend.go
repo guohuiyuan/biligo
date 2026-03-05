@@ -151,6 +151,7 @@ func (c *Client) GetFans(page, pageSize int32) ([]struct {
 	Mid   int64
 	Uname string
 	Face  string
+	MTime int64
 }, error) {
 	uid, err := c.currentUserID(context.Background())
 	if err != nil {
@@ -166,16 +167,19 @@ func (c *Client) GetFans(page, pageSize int32) ([]struct {
 		Mid   int64
 		Uname string
 		Face  string
+		MTime int64
 	}, 0, len(resp.List))
 	for _, item := range resp.List {
 		out = append(out, struct {
 			Mid   int64
 			Uname string
 			Face  string
+			MTime int64
 		}{
 			Mid:   item.Mid,
 			Uname: item.Uname,
 			Face:  item.Face,
+			MTime: item.MTime,
 		})
 	}
 	return out, nil
