@@ -76,6 +76,8 @@ func (c *Client) SetCredential(credential *Credential) {
 	for _, base := range []string{c.config.BaseURL, c.config.PassportBaseURL, c.config.LiveBaseURL} {
 		c.cookies.SetCredential(base, c.credential)
 	}
+	// 私信/会话接口走 api.vc.bilibili.com，需单独注入凭证
+	c.cookies.SetCredential("https://api.vc.bilibili.com", c.credential)
 }
 
 // Credential returns a defensive copy of the active credential.
