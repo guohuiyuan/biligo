@@ -49,9 +49,10 @@ type QRCodePoll struct {
 }
 
 type NavInfo struct {
-	IsLogin bool   `json:"isLogin"`
-	Mid     int64  `json:"mid"`
-	Uname   string `json:"uname"`
+	IsLogin bool    `json:"isLogin"`
+	Mid     int64   `json:"mid"`
+	Uname   string  `json:"uname"`
+	Money   float64 `json:"money"`
 	WBIImg  struct {
 		ImgURL string `json:"img_url"`
 		SubURL string `json:"sub_url"`
