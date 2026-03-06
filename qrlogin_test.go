@@ -11,11 +11,13 @@ import (
 // TestInteractiveQRCodeLogin 完整扫码登录流程：生成二维码 → 终端展示 → 轮询结果。
 //
 // 独立运行方式（不干扰其他自动化测试）：
-// 	go test -v -run TestInteractiveQRCodeLogin -timeout 180s ./...
+//
+//	BILIBILI_QRCODE_TESTS=1 go test -v -run TestInteractiveQRCodeLogin -timeout 180s ./...
 //
 // 测试会在终端打印二维码 URL，用手机 bilibili App 扫码后确认登录即可。
 // 成功后会将新 cookie 打印到日志，用于替换 .env 中的 BILIBILI_COOKIE。
 func TestInteractiveQRCodeLogin(t *testing.T) {
+	requireQRCodeTests(t)
 	t.Log("=== 开始交互式扫码登录测试 ===")
 	t.Log("API: passport-login/web/qrcode/generate + poll")
 

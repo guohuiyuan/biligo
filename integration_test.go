@@ -3,6 +3,7 @@ package bilibili
 // 集成测试：从 .env 加载 BILIBILI_COOKIE，对各功能模块进行真实 API 测试。
 // 运行全部：  go test -v -run TestIntegration ./...
 // 仅写操作：  BILIBILI_WRITE_TESTS=1 go test -v -run TestIntegration ./...
+// 扫码相关：  BILIBILI_QRCODE_TESTS=1 go test -v -run 'TestIntegrationLogin_QRCodeGenerate|TestInteractiveQRCodeLogin' ./...
 //
 // 若 .env 中无 BILIBILI_COOKIE，所有集成子测试自动跳过。
 
@@ -83,6 +84,13 @@ func requireWrite(t *testing.T) {
 	t.Helper()
 	if loadEnvKey(".env", "BILIBILI_WRITE_TESTS") != "1" {
 		t.Skip("跳过：在 .env 中设置 BILIBILI_WRITE_TESTS=1 才运行写操作测试")
+	}
+}
+
+func requireQRCodeTests(t *testing.T) {
+	t.Helper()
+	if loadEnvKey(".env", "BILIBILI_QRCODE_TESTS") != "1" && os.Getenv("BILIBILI_QRCODE_TESTS") != "1" {
+		t.Skip("跳过：设置 BILIBILI_QRCODE_TESTS=1 后才运行扫码测试")
 	}
 }
 
@@ -525,6 +533,7 @@ func TestIntegrationLogin_Nav(t *testing.T) {
 
 // TestIntegrationLogin_QRCodeGenerate 验证二维码生成接口（无需登录态）。
 func TestIntegrationLogin_QRCodeGenerate(t *testing.T) {
+	requireQRCodeTests(t)
 	t.Log("API: GET passport.bilibili.com/x/passport-login/web/qrcode/generate")
 	// 使用匿名客户端，不需要 cookie
 	c := NewClient()
