@@ -158,7 +158,7 @@ func (c *Client) GetFans(page, pageSize int32) ([]struct {
 		return nil, err
 	}
 
-	resp, err := c.User().Followers(context.Background(), uid, int(page), int(pageSize))
+	resp, err := c.User().Fans(context.Background(), uid, int(page), int(pageSize))
 	if err != nil {
 		return nil, err
 	}

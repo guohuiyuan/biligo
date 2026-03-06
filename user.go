@@ -61,6 +61,19 @@ func (s *UserService) Followers(ctx context.Context, mid int64, page, pageSize i
 	return &out, nil
 }
 
+func (s *UserService) Fans(ctx context.Context, mid int64, page, pageSize int) (*UserFollowersResult, error) {
+	var out UserFollowersResult
+	req := s.client.NewRequest(endpointUserFans).
+		ParamInt("vmid", mid).
+		ParamInt("pn", int64(page)).
+		ParamInt("ps", int64(pageSize))
+	err := req.Do(ctx, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 func (s *UserService) FollowersUnreadCount(ctx context.Context) (*FollowerUnreadCount, error) {
 	var out FollowerUnreadCount
 	err := s.client.NewRequest(endpointUserFollowersUnreadCount).Do(ctx, &out)

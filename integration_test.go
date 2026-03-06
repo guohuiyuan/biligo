@@ -187,12 +187,12 @@ func TestIntegrationUser_Videos(t *testing.T) {
 	}
 }
 
-func TestIntegrationUser_Followers(t *testing.T) {
-	t.Log("API: GET /x/relation/followers")
+func TestIntegrationUser_Fans(t *testing.T) {
+	t.Log("API: GET /x/relation/fans")
 	c := requireClient(t)
-	result, err := c.User().Followers(integCtx, testMID, 1, 5)
+	result, err := c.User().Fans(integCtx, testMID, 1, 5)
 	if err != nil {
-		t.Fatalf("❌ User.Followers error: %v", err)
+		t.Fatalf("❌ User.Fans error: %v", err)
 	}
 	t.Logf("✅ 粉丝样本数: %d", len(result.List))
 	for i, u := range result.List {
