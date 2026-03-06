@@ -111,6 +111,9 @@ type UserRelationStat struct {
 }
 
 type UserVideoSearchResult struct {
+	Page struct {
+		Count int `json:"count"`
+	} `json:"page"`
 	List struct {
 		VList []UserVideoItem `json:"vlist"`
 	} `json:"list"`
