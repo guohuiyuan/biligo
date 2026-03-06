@@ -82,6 +82,13 @@ var (
 		needLogin: true,
 		dataField: "data",
 	}
+	endpointUserFollowersUnreadCount = endpoint{
+		name:      "user.followers.unread_count",
+		path:      "/x/relation/followers/unread/count",
+		method:    http.MethodGet,
+		needLogin: true,
+		dataField: "data",
+	}
 	endpointSearchAll = endpoint{
 		name:      "search.all",
 		path:      "/x/web-interface/wbi/search/all/v2",

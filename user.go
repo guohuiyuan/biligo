@@ -61,6 +61,15 @@ func (s *UserService) Followers(ctx context.Context, mid int64, page, pageSize i
 	return &out, nil
 }
 
+func (s *UserService) FollowersUnreadCount(ctx context.Context) (*FollowerUnreadCount, error) {
+	var out FollowerUnreadCount
+	err := s.client.NewRequest(endpointUserFollowersUnreadCount).Do(ctx, &out)
+	if err != nil {
+		return nil, err
+	}
+	return &out, nil
+}
+
 type UserInfo struct {
 	Mid      int64  `json:"mid"`
 	Name     string `json:"name"`
@@ -154,4 +163,9 @@ type UserFollowersResult struct {
 		Face  string `json:"face"`
 		MTime int64  `json:"mtime"`
 	} `json:"list"`
+}
+
+type FollowerUnreadCount struct {
+	Count int64 `json:"count"`
+	Time  int64 `json:"time"`
 }
